@@ -18,7 +18,9 @@
 
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
     <MacCatalystMinimumDeploymentTarget>15.0</MacCatalystMinimumDeploymentTarget>
-    <CreatePackage>true</CreatePackage>
+    <CreatePackage>false</CreatePackage>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CodesignKey>-</CodesignKey>
   </PropertyGroup>
 
   <ItemGroup>

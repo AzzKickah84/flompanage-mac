@@ -85,11 +85,11 @@ bundle_pair() {
     -c Release \
     -f net9.0-maccatalyst \
     -r "$MAUI_RID" \
-    -p:CreatePackage=true \
-    -o "$MAUI_OUT"
+    -p:CreatePackage=false \
+    -p:EnableCodeSigning=false
 
   local APP_PATH
-  APP_PATH="$(find "$MAUI_OUT" -name '*.app' -type d | head -n1)"
+  APP_PATH="$(find "$MAUI_PROJECT/bin/Release/net9.0-maccatalyst/$MAUI_RID" "$MAUI_PROJECT/bin/Release/net9.0-maccatalyst/$MAUI_RID/publish" "$MAUI_OUT" -name '*.app' -type d 2>/dev/null | head -n1)"
   if [[ -z "$APP_PATH" ]]; then
     echo "FOUT: .app bundle niet gevonden in $MAUI_OUT"
     exit 1
