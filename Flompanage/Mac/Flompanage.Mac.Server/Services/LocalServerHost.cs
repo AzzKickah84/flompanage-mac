@@ -1,9 +1,5 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.FileProviders.Physical;
-using Microsoft.Extensions.Hosting;
 using System.Text.Json;
+using Microsoft.Extensions.FileProviders;
 
 namespace Flompanage.Mac.Server.Services;
 
@@ -20,56 +16,54 @@ internal static class LocalServerHost
     private static string _targetUrl = DefaultServerUrl;
     private static string _kestrelUrl = "http://localhost:17891";
 
-    private static string ConfigDir =>
+    private static string ConfigDirPath =>
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "Library",
             "Application Support",
             "Flompanage");
 
-    private static string ConfigPath => Path.Combine(ConfigDir, "target-url.txt");
-    private static string SettingsPath => Path.Combine(ConfigDir, "login-settings.json");
+    private static string ConfigPath => Path.Combine(ConfigDirPath, "target-url.txt");
+    private static string SettingsPath => Path.Combine(ConfigDirPath, "login-settings.json");
 
-    internal static string GetConfigDir() => ConfigDir;
+    internal static string GetConfigDir() => ConfigDirPath;
     internal static string KestrelUrl => _kestrelUrl;
 
     internal static LoginSettings LoadSettingsForAbout() => LoadSettings();
 
-    internal static IHost BuildHost()
+    internal static void ConfigureBuilder(WebApplicationBuilder builder)
     {
         _targetUrl = LoadSettings().Url;
         _kestrelUrl = $"http://localhost:{GetStablePort()}";
         ShellRuntime.LocalServerUrl = _kestrelUrl;
 
-        return Host.CreateDefaultBuilder()
-            .ConfigureWebHostDefaults(web =>
-            {
-                web.UseUrls(_kestrelUrl);
-                web.Configure(app =>
-                {
-                    app.UseDefaultFiles();
-                    app.UseStaticFiles(new StaticFileOptions
-                    {
-                        FileProvider = new PhysicalFileProvider(
-                            Path.Combine(AppContext.BaseDirectory, "wwwroot")),
-                        ServeUnknownFileTypes = true,
-                        DefaultContentType = "application/octet-stream",
-                        OnPrepareResponse = ctx =>
-                        {
-                            ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
-                            ctx.Context.Response.Headers.Pragma = "no-cache";
-                            ctx.Context.Response.Headers.Expires = "0";
-                        },
-                    });
+        builder.WebHost.UseUrls(_kestrelUrl);
 
-                    app.Use(HandleLocalApiAsync);
-                    app.Run(ProxyRequestAsync);
-                });
-            })
-            .Build();
+        var wwwroot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+        builder.Environment.WebRootPath = wwwroot;
+        builder.Environment.ContentRootPath = AppContext.BaseDirectory;
     }
 
-    private static async Task HandleLocalApiAsync(HttpContext context, RequestDelegate next)
+    internal static void ConfigureApp(WebApplication app)
+    {
+        app.Use(async (context, next) => await HandleLocalApiAsync(context, next));
+        app.UseDefaultFiles();
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(app.Environment.WebRootPath),
+            ServeUnknownFileTypes = true,
+            DefaultContentType = "application/octet-stream",
+            OnPrepareResponse = ctx =>
+            {
+                ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+                ctx.Context.Response.Headers.Pragma = "no-cache";
+                ctx.Context.Response.Headers.Expires = "0";
+            },
+        });
+        app.MapFallback(ProxyRequestAsync);
+    }
+
+    private static async Task HandleLocalApiAsync(HttpContext context, Func<Task> next)
     {
         var path = context.Request.Path.Value ?? "";
 
@@ -154,7 +148,7 @@ internal static class LocalServerHost
             }
         }
 
-        await next(context);
+        await next();
     }
 
     private static async Task ProxyRequestAsync(HttpContext context)
@@ -276,7 +270,7 @@ internal static class LocalServerHost
     {
         try
         {
-            Directory.CreateDirectory(ConfigDir);
+            Directory.CreateDirectory(ConfigDirPath);
             settings.Url = settings.Url.TrimEnd('/');
             var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(SettingsPath, json);
