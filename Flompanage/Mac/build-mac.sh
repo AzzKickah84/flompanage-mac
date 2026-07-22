@@ -46,7 +46,8 @@ fi
 
 echo "[2/7] UI bouwen (Vite -> Server/wwwroot)..."
 cd "$UI_DIR"
-rm -rf "$SERVER_PROJECT/wwwroot"
+mkdir -p "$SERVER_PROJECT/wwwroot"
+rm -rf "$SERVER_PROJECT/wwwroot"/*
 export VITE_FLOMPANAGE_VERSION="$VERSION"
 export VITE_FLOMPANAGE_GITHUB_REPO="$GITHUB_REPO"
 export VITE_FLOMPANAGE_MANIFEST_URL="$MANIFEST_URL"

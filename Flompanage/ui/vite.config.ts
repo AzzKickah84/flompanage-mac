@@ -5,6 +5,9 @@ import { resolve } from "path";
 import pkg from "./package.json";
 
 const defaultOutDir = resolve(__dirname, "../App/wwwroot");
+const outDir = process.env.VITE_OUT_DIR
+  ? resolve(process.env.VITE_OUT_DIR)
+  : defaultOutDir;
 
 export default defineConfig({
   plugins: [
@@ -13,9 +16,6 @@ export default defineConfig({
       name: "flompanage-build-info",
       closeBundle() {
         const version = process.env.VITE_FLOMPANAGE_VERSION || pkg.version;
-        const outDir = process.env.VITE_OUT_DIR
-          ? resolve(process.env.VITE_OUT_DIR)
-          : defaultOutDir;
         const assetsDir = resolve(outDir, "assets");
         let jsAsset: string | undefined;
         try {
@@ -41,7 +41,7 @@ export default defineConfig({
   ],
   base: "./",
   build: {
-    outDir: defaultOutDir,
+    outDir,
     emptyOutDir: true,
     modulePreload: false,
   },
