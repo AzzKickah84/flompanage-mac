@@ -55,7 +55,9 @@ export VITE_OUT_DIR="$SERVER_PROJECT/wwwroot"
 npm run build:mac
 
 echo "[3/7] .NET MAUI workload..."
-dotnet workload install maui --skip-manifest-update || dotnet workload install maui
+if ! dotnet workload list | grep -q maui; then
+  dotnet workload install maui --skip-manifest-update || dotnet workload install maui
+fi
 
 bundle_pair() {
   local MAUI_RID="$1"
