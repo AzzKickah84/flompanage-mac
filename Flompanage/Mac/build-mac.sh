@@ -63,6 +63,38 @@ else
   echo "  (overgeslagen — workload al geïnstalleerd in CI)"
 fi
 
+find_app_bundle() {
+  local app_path
+  app_path="$(find "$@" -name '*.app' -type d 2>/dev/null | head -n1)"
+  if [[ -n "$app_path" ]]; then
+    echo "$app_path"
+    return 0
+  fi
+
+  local pkg
+  pkg="$(find "$@" -name '*.pkg' 2>/dev/null | head -n1)"
+  if [[ -z "$pkg" ]]; then
+    return 1
+  fi
+
+  echo "  .app niet direct gevonden; uitpakken van $(basename "$pkg")..." >&2
+  local expand_dir="$STAGING/pkg-expand-$$-$RANDOM"
+  mkdir -p "$expand_dir"
+  (
+    cd "$expand_dir"
+    xar -xf "$pkg"
+    if [[ -f Payload ]]; then
+      cat Payload | gunzip -dc | cpio -idm 2>/dev/null
+    fi
+  )
+  app_path="$(find "$expand_dir" -name '*.app' -type d 2>/dev/null | head -n1)"
+  if [[ -n "$app_path" ]]; then
+    echo "$app_path"
+    return 0
+  fi
+  return 1
+}
+
 bundle_pair() {
   local MAUI_RID="$1"
   local OSX_RID="$2"
@@ -85,13 +117,14 @@ bundle_pair() {
     -c Release \
     -f net9.0-maccatalyst \
     -r "$MAUI_RID" \
-    -p:CreatePackage=false \
-    -p:EnableCodeSigning=false
+    -p:CreatePackage=true \
+    -p:EnableCodeSigning=false \
+    -o "$MAUI_OUT"
 
   local APP_PATH
-  APP_PATH="$(find "$MAUI_PROJECT/bin/Release/net9.0-maccatalyst/$MAUI_RID" "$MAUI_PROJECT/bin/Release/net9.0-maccatalyst/$MAUI_RID/publish" "$MAUI_OUT" -name '*.app' -type d 2>/dev/null | head -n1)"
-  if [[ -z "$APP_PATH" ]]; then
-    echo "FOUT: .app bundle niet gevonden in $MAUI_OUT"
+  if ! APP_PATH="$(find_app_bundle "$MAUI_OUT" "$MAUI_PROJECT/bin/Release/net9.0-maccatalyst/$MAUI_RID")"; then
+    echo "FOUT: .app bundle niet gevonden na MAUI publish"
+    find "$MAUI_OUT" "$MAUI_PROJECT/bin/Release/net9.0-maccatalyst/$MAUI_RID" -maxdepth 4 2>/dev/null | head -40 || true
     exit 1
   fi
 
