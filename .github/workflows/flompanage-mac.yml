@@ -7,7 +7,8 @@ on:
     paths:
       - "Flompanage/Mac/**"
       - "Flompanage/ui/**"
-      - "scripts/bump-flompanage-mac-version.mjs"
+      - "scripts/sync-flompanage-mac-version.mjs"
+      - "scripts/bump-flompanage-version.mjs"
 
 jobs:
   build-macos:

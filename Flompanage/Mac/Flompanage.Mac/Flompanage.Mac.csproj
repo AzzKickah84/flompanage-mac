@@ -11,9 +11,9 @@
 
     <ApplicationTitle>Flompanage</ApplicationTitle>
     <ApplicationId>nl.flompert.flompanage.mac</ApplicationId>
-    <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
-    <Version>1.0.0</Version>
+    <ApplicationDisplayVersion>1.0.106</ApplicationDisplayVersion>
+    <ApplicationVersion>106</ApplicationVersion>
+    <Version>1.0.106</Version>
     <AssemblyName>Flompanage</AssemblyName>
 
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>

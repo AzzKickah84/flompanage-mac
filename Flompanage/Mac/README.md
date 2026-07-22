@@ -41,6 +41,9 @@ Uses repo `AzzKickah84/flompanage-mac` (see `Flompanage.Mac/update-channel.json`
 
 GitHub Actions workflow `.github/workflows/flompanage-mac.yml` builds both DMGs on `macos-14` and uploads artifacts. Trigger manually via **Actions → Build Flompanage Mac → Run workflow**.
 
-## Shared UI
+## Version
+
+Mac uses the **same version** as the Windows app: `Flompanage/ui/package.json`.  
+`build-mac.sh` syncs that version into the Mac projects before each build.
 
 The React UI is shared from `../ui` (`npm run build:mac`). Windows and Mac use the same interface; only the native shell differs.

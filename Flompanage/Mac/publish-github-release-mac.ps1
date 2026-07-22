@@ -7,8 +7,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
-$Csproj = Join-Path $Root "Flompanage.Mac\Flompanage.Mac.csproj"
-$Version = ([regex]::Match((Get-Content $Csproj -Raw), '<Version>([^<]+)</Version>')).Groups[1].Value
+$PackageJson = Join-Path $Root "..\ui\package.json"
+$Version = (Get-Content $PackageJson -Raw | ConvertFrom-Json).version
+if (-not $Version) {
+    throw "Kan versie niet lezen uit $PackageJson"
+}
 $Dist = Join-Path $Root "dist"
 $Channel = Get-Content (Join-Path $Root "Flompanage.Mac\update-channel.json") -Raw | ConvertFrom-Json
 $Repo = $Channel.githubRepo

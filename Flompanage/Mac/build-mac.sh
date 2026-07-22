@@ -14,15 +14,15 @@ if [[ "${1:-}" == "-NoBump" ]]; then
 fi
 
 read_version() {
-  sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' "$MAUI_PROJECT/Flompanage.Mac.csproj" | head -n1
+  node -e "console.log(require('$UI_DIR/package.json').version)"
 }
 
 if [[ -z "$NO_BUMP" ]]; then
-  echo "[0/7] Versienummer ophogen..."
-  node "$ROOT/../../scripts/bump-flompanage-mac-version.mjs" "$MAUI_PROJECT/Flompanage.Mac.csproj"
-  SERVER_VERSION="$(read_version)"
-  sed -i '' "s:<Version>[^<]*</Version>:<Version>${SERVER_VERSION}</Version>:" "$SERVER_PROJECT/Flompanage.Mac.Server.csproj" 2>/dev/null || \
-    sed -i "s:<Version>[^<]*</Version>:<Version>${SERVER_VERSION}</Version>:" "$SERVER_PROJECT/Flompanage.Mac.Server.csproj"
+  echo "[0/7] Versienummer ophogen (gedeeld met Windows)..."
+  node "$ROOT/../../scripts/bump-flompanage-version.mjs" "$UI_DIR/package.json"
+else
+  echo "[0/7] Mac-versie synchroniseren met Windows..."
+  node "$ROOT/../../scripts/sync-flompanage-mac-version.mjs" "$UI_DIR/package.json"
 fi
 
 VERSION="$(read_version)"
