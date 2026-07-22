@@ -83,7 +83,7 @@ bundle_pair() {
   rm -rf "$MAUI_OUT"
   dotnet publish "$MAUI_PROJECT/Flompanage.Mac.csproj" \
     -c Release \
-    -f net8.0-maccatalyst \
+    -f net9.0-maccatalyst \
     -r "$MAUI_RID" \
     -p:CreatePackage=false \
     -o "$MAUI_OUT"

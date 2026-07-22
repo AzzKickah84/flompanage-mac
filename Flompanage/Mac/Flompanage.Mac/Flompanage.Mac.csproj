@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net9.0-maccatalyst</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>Flompanage.Mac</RootNamespace>
     <UseMaui>true</UseMaui>
@@ -19,11 +19,10 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
     <MacCatalystMinimumDeploymentTarget>15.0</MacCatalystMinimumDeploymentTarget>
     <CreatePackage>false</CreatePackage>
-    <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.70" />
   </ItemGroup>
 
   <ItemGroup>
