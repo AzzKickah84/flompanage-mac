@@ -24,15 +24,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.70" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.70" />
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="update-channel.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="wwwroot\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>

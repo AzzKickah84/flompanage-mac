@@ -2,7 +2,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-PROJECT="$ROOT/Flompanage.Mac"
+MAUI_PROJECT="$ROOT/Flompanage.Mac"
+SERVER_PROJECT="$ROOT/Flompanage.Mac.Server"
 UI_DIR="$ROOT/../ui"
 DIST="$ROOT/dist"
 STAGING="$ROOT/release"
@@ -13,12 +14,15 @@ if [[ "${1:-}" == "-NoBump" ]]; then
 fi
 
 read_version() {
-  sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' "$PROJECT/Flompanage.Mac.csproj" | head -n1
+  sed -n 's:.*<Version>\([^<]*\)</Version>.*:\1:p' "$MAUI_PROJECT/Flompanage.Mac.csproj" | head -n1
 }
 
 if [[ -z "$NO_BUMP" ]]; then
-  echo "[0/6] Versienummer ophogen..."
-  node "$ROOT/../../scripts/bump-flompanage-mac-version.mjs" "$PROJECT/Flompanage.Mac.csproj"
+  echo "[0/7] Versienummer ophogen..."
+  node "$ROOT/../../scripts/bump-flompanage-mac-version.mjs" "$MAUI_PROJECT/Flompanage.Mac.csproj"
+  SERVER_VERSION="$(read_version)"
+  sed -i '' "s:<Version>[^<]*</Version>:<Version>${SERVER_VERSION}</Version>:" "$SERVER_PROJECT/Flompanage.Mac.Server.csproj" 2>/dev/null || \
+    sed -i "s:<Version>[^<]*</Version>:<Version>${SERVER_VERSION}</Version>:" "$SERVER_PROJECT/Flompanage.Mac.Server.csproj"
 fi
 
 VERSION="$(read_version)"
@@ -26,12 +30,12 @@ echo "Versie: $VERSION"
 
 GITHUB_REPO=""
 MANIFEST_URL=""
-if [[ -f "$PROJECT/update-channel.json" ]]; then
-  GITHUB_REPO="$(node -e "const c=require('$PROJECT/update-channel.json'); console.log(c.githubRepo||'')")"
-  MANIFEST_URL="$(node -e "const c=require('$PROJECT/update-channel.json'); console.log(c.manifestUrl||'')")"
+if [[ -f "$MAUI_PROJECT/update-channel.json" ]]; then
+  GITHUB_REPO="$(node -e "const c=require('$MAUI_PROJECT/update-channel.json'); console.log(c.githubRepo||'')")"
+  MANIFEST_URL="$(node -e "const c=require('$MAUI_PROJECT/update-channel.json'); console.log(c.manifestUrl||'')")"
 fi
 
-echo "[1/6] UI assets..."
+echo "[1/7] UI assets..."
 if [[ -f "$ROOT/../../public/mainlogo.png" ]]; then
   mkdir -p "$UI_DIR/public"
   cp "$ROOT/../../public/mainlogo.png" "$UI_DIR/public/logo.png"
@@ -40,45 +44,66 @@ elif [[ -f "$ROOT/../../mainlogo.png" ]]; then
   cp "$ROOT/../../mainlogo.png" "$UI_DIR/public/logo.png"
 fi
 
-echo "[2/6] UI bouwen (Vite -> Mac/wwwroot)..."
+echo "[2/7] UI bouwen (Vite -> Server/wwwroot)..."
 cd "$UI_DIR"
-rm -rf "$PROJECT/wwwroot"
+rm -rf "$SERVER_PROJECT/wwwroot"
 export VITE_FLOMPANAGE_VERSION="$VERSION"
 export VITE_FLOMPANAGE_GITHUB_REPO="$GITHUB_REPO"
 export VITE_FLOMPANAGE_MANIFEST_URL="$MANIFEST_URL"
-export VITE_OUT_DIR="$PROJECT/wwwroot"
+export VITE_OUT_DIR="$SERVER_PROJECT/wwwroot"
 npm run build:mac
 
-echo "[3/6] .NET MAUI workload..."
+echo "[3/7] .NET MAUI workload..."
 dotnet workload install maui --skip-manifest-update || dotnet workload install maui
 
-publish_rid() {
-  local RID="$1"
-  local LABEL="$2"
-  echo "[4/6] Publiceren ($LABEL / $RID)..."
-  dotnet publish "$PROJECT/Flompanage.Mac.csproj" \
+bundle_pair() {
+  local MAUI_RID="$1"
+  local OSX_RID="$2"
+  local LABEL="$3"
+
+  echo "[4/7] Server publiceren ($LABEL / $OSX_RID)..."
+  local SERVER_OUT="$STAGING/server-$OSX_RID"
+  rm -rf "$SERVER_OUT"
+  dotnet publish "$SERVER_PROJECT/Flompanage.Mac.Server.csproj" \
+    -c Release \
+    -r "$OSX_RID" \
+    --self-contained true \
+    -p:PublishSingleFile=false \
+    -o "$SERVER_OUT"
+
+  echo "[5/7] MAUI publiceren ($LABEL / $MAUI_RID)..."
+  local MAUI_OUT="$STAGING/maui-$MAUI_RID"
+  rm -rf "$MAUI_OUT"
+  dotnet publish "$MAUI_PROJECT/Flompanage.Mac.csproj" \
     -c Release \
     -f net9.0-maccatalyst \
-    -r "$RID" \
+    -r "$MAUI_RID" \
     -p:CreatePackage=false \
-    -o "$STAGING/$RID"
+    -o "$MAUI_OUT"
 
   local APP_PATH
-  APP_PATH="$(find "$STAGING/$RID" -maxdepth 1 -name '*.app' | head -n1)"
+  APP_PATH="$(find "$MAUI_OUT" -maxdepth 1 -name '*.app' | head -n1)"
   if [[ -z "$APP_PATH" ]]; then
-    echo "FOUT: .app bundle niet gevonden in $STAGING/$RID"
+    echo "FOUT: .app bundle niet gevonden in $MAUI_OUT"
     exit 1
   fi
 
+  echo "[6/7] Server bundelen in .app..."
+  local SERVER_BUNDLE="$APP_PATH/Contents/Resources/Flompanage.Server"
+  rm -rf "$SERVER_BUNDLE"
+  mkdir -p "$SERVER_BUNDLE"
+  cp -R "$SERVER_OUT/"* "$SERVER_BUNDLE/"
+  chmod +x "$SERVER_BUNDLE/Flompanage.Server"
+
   mkdir -p "$DIST"
   local DMG="$DIST/Flompanage-Mac-${VERSION}-${LABEL}.dmg"
-  echo "[5/6] DMG maken ($LABEL)..."
+  echo "[7/7] DMG maken ($LABEL)..."
   "$ROOT/scripts/create-dmg.sh" "$APP_PATH" "$DMG"
   echo "  -> $DMG"
 }
 
-publish_rid "maccatalyst-arm64" "AppleSilicon"
-publish_rid "maccatalyst-x64" "Intel"
+bundle_pair "maccatalyst-arm64" "osx-arm64" "AppleSilicon"
+bundle_pair "maccatalyst-x64" "osx-x64" "Intel"
 
 echo ""
 echo "Klaar:"

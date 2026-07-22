@@ -7,8 +7,29 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
-        LocalServerHost.Start();
         MainPage = new MainPage();
+    }
+
+    protected override async void OnStart()
+    {
+        base.OnStart();
+        try
+        {
+            await MacServerLauncher.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            await Current!.MainPage!.DisplayAlert(
+                "Flompanage — Opstartfout",
+                $"Kan de lokale server niet starten: {ex.Message}",
+                "OK");
+        }
+    }
+
+    protected override void OnSleep()
+    {
+        base.OnSleep();
+        MacServerLauncher.Stop();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

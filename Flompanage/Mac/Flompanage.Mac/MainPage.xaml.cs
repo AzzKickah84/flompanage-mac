@@ -17,9 +17,21 @@ public partial class MainPage : ContentPage
     {
         await MacNotificationService.EnsurePermissionAsync();
 
-        var version = ShellRuntime.GetClientVersion();
-        var url = $"{LocalServerHost.KestrelUrl.TrimEnd('/')}/?shell={Uri.EscapeDataString(version)}";
-        AppWebView.Source = url;
+        if (string.IsNullOrEmpty(MacServerLauncher.BaseUrl))
+        {
+            try
+            {
+                await MacServerLauncher.StartAsync();
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Flompanage", ex.Message, "OK");
+                return;
+            }
+        }
+
+        var version = GetUiVersion();
+        AppWebView.Source = $"{MacServerLauncher.BaseUrl.TrimEnd('/')}/?shell={Uri.EscapeDataString(version)}";
     }
 
     private void OnWebViewNavigating(object? sender, WebNavigatingEventArgs e)
@@ -37,7 +49,6 @@ public partial class MainPage : ContentPage
             return;
 
         _bridgeInjected = true;
-        ShellRuntime.WebViewVersion = "WKWebView (macOS)";
 
         const string script = """
             (function () {
@@ -55,10 +66,7 @@ public partial class MainPage : ContentPage
         {
             await AppWebView.EvaluateJavaScriptAsync(script);
         }
-        catch
-        {
-            // Bridge injection failed — notifications and external links fall back to browser APIs.
-        }
+        catch { }
     }
 
     private void HandleBridgeAction(string url)
@@ -66,26 +74,34 @@ public partial class MainPage : ContentPage
         try
         {
             var payload = url[ActionScheme.Length..];
-            if (payload.StartsWith("message/", StringComparison.OrdinalIgnoreCase))
+            if (!payload.StartsWith("message/", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var encoded = payload["message/".Length..];
+            var json = Uri.UnescapeDataString(encoded);
+
+            if (WebMessageParser.TryParseOpenUrl(json, out var openUrl))
             {
-                var encoded = payload["message/".Length..];
-                var json = Uri.UnescapeDataString(encoded);
-
-                if (WebMessageParser.TryParseOpenUrl(json, out var openUrl))
-                {
-                    _ = Launcher.OpenAsync(openUrl);
-                    return;
-                }
-
-                if (WebMessageParser.TryParseNotify(json, out var title, out var message))
-                {
-                    MacNotificationService.Show(title, message);
-                }
+                _ = Launcher.OpenAsync(openUrl);
+                return;
             }
+
+            if (WebMessageParser.TryParseNotify(json, out var title, out var message))
+                MacNotificationService.Show(title, message);
         }
-        catch
+        catch { }
+    }
+
+    private static string GetUiVersion()
+    {
+        try
         {
-            // Ignore malformed bridge messages.
+            var version = typeof(MauiProgram).Assembly.GetName().Version;
+            if (version != null)
+                return $"{version.Major}.{version.Minor}.{version.Build}";
         }
+        catch { }
+
+        return "1.0.0";
     }
 }
