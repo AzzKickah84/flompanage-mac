@@ -31,15 +31,12 @@ macOS may block unsigned apps. Right-click the app → **Open** → **Open** aga
 
 ## Publish to GitHub
 
-Uses repo `AzzKickah84/flompanage-mac` (see `Flompanage.Mac/update-channel.json`).
+Uses repo `AzzKickah84/flompanage-mac` (see `Flompanage.Mac/update-channel.json`).  
+That repo is **releases only** — no source code is uploaded. Build locally (or via CI elsewhere), then:
 
 ```powershell
 .\publish-github-release-mac.ps1
 ```
-
-## CI build
-
-GitHub Actions workflow `.github/workflows/flompanage-mac.yml` builds both DMGs on `macos-14` and uploads artifacts. Trigger manually via **Actions → Build Flompanage Mac → Run workflow**.
 
 ## Version
 

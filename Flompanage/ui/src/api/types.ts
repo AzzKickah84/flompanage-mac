@@ -68,6 +68,25 @@ export type ModerationLogEntry = {
   createdAt: string;
 };
 
+export type StaffActionLogEntry = {
+  id: string;
+  targetType: "VIDEO" | "COMMENT" | "USER" | "SITE";
+  targetId: string;
+  action: string;
+  actionLabel: string;
+  summary: string;
+  actor: { id: string; username: string; role: Role };
+  reason: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export type StaffActionLogPage = {
+  entries: StaffActionLogEntry[];
+  total: number;
+  hasMore: boolean;
+};
+
 export type AdminUserRow = {
   id: string; email: string; username: string; role: Role; avatarPath?: string | null;
   isBanned: boolean; bannedUntil: string | null; banReason: string | null;

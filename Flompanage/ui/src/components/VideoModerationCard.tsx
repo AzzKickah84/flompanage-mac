@@ -60,7 +60,8 @@ export function VideoModerationCard({
   const [tagsOpen, setTagsOpen] = useState(false);
   const [acting, setActing] = useState(false);
 
-  const isPending = video.status === "PENDING" || video.status === "PROCESSING";
+  const isPending = video.status === "PENDING";
+  const isProcessing = video.status === "PROCESSING";
   const tags = video.tags ?? [];
   const isImage = video.mediaType === "IMAGE";
   const isYoutube = video.mediaType === "YOUTUBE";
@@ -353,6 +354,11 @@ export function VideoModerationCard({
                     >
                       {flompselsLabel()}
                     </button>
+                  )}
+                  {isProcessing && (
+                    <span style={{ fontSize: 12, color: "var(--accent)", alignSelf: "center" }}>
+                      Video wordt nog verwerkt...
+                    </span>
                   )}
                   {isPending && (
                     <>

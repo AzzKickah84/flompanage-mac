@@ -1,4 +1,4 @@
-import type { AdminComment, AdminUser, AdminUserProfile, AdminUserRow, AdminVideo, ModerationLogEntry, NotificationPollSnapshot, SiteStats, SiteSettings, UserKudoAdminInfo, VisitorIpEntry, VisitorIpsResponse, FullStatistics } from "./types";
+import type { AdminComment, AdminUser, AdminUserProfile, AdminUserRow, AdminVideo, ModerationLogEntry, NotificationPollSnapshot, SiteStats, SiteSettings, StaffActionLogPage, UserKudoAdminInfo, VisitorIpEntry, VisitorIpsResponse, FullStatistics } from "./types";
 
 const STORAGE_KEY = "flompanage-session";
 const BASE_URL_KEY = "flompanage-base-url";
@@ -264,6 +264,17 @@ class ApiClient {
       `/api/admin/moderation-log?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`,
     );
     return d.entries;
+  }
+  async getStaffActionLog(options?: {
+    targetType?: "VIDEO" | "COMMENT" | "USER" | "SITE";
+    offset?: number;
+    limit?: number;
+  }) {
+    const params = new URLSearchParams();
+    if (options?.targetType) params.set("targetType", options.targetType);
+    params.set("offset", String(options?.offset ?? 0));
+    params.set("limit", String(options?.limit ?? 50));
+    return this.request<StaffActionLogPage>(`/api/admin/moderation-log?${params.toString()}`);
   }
   async validateBrevo(apiKey: string) {
     return this.request<{ account: { email?: string; companyName?: string; planType?: string } }>(

@@ -11,6 +11,7 @@ import { UsersPage } from "../pages/UsersPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { VisitorIpsPage } from "../pages/VisitorIpsPage";
 import { StatistiekenPage } from "../pages/StatistiekenPage";
+import { ActielogPage } from "../pages/ActielogPage";
 import { useAppUpdate } from "../context/UpdateContext";
 import { useAppAbout, useAppVersion } from "../context/AppVersionContext";
 import { AboutModal } from "./AboutModal";
@@ -18,11 +19,12 @@ import { UserAvatar } from "./UserAvatar";
 import { UserProfileOverlay } from "../pages/UserProfilePage";
 import { UsernameLink } from "./UsernameLink";
 
-type Page = "dashboard" | "videos" | "flompsels" | "users" | "settings" | "visitorIps" | "statistieken";
+type Page = "dashboard" | "videos" | "flompsels" | "users" | "actielog" | "settings" | "visitorIps" | "statistieken";
 
 const nav: { id: Page; label: string }[] = [
   { id: "dashboard", label: "Dashboard" }, { id: "videos", label: "Video's" },
   { id: "flompsels", label: "Flompsels" }, { id: "users", label: "Gebruikers" },
+  { id: "actielog", label: "Actielog" },
   { id: "settings", label: "Instellingen" },
   { id: "visitorIps", label: "Bezoeker IP's" },
   { id: "statistieken", label: "Statistieken" },
@@ -314,6 +316,7 @@ export function Layout() {
         <PagePanel active={page === "videos"}><VideosPage /></PagePanel>
         <PagePanel active={page === "flompsels"}><FlompselsPage /></PagePanel>
         <PagePanel active={page === "users"}><UsersPage /></PagePanel>
+        <PagePanel active={page === "actielog"}><ActielogPage /></PagePanel>
         <PagePanel active={page === "settings"}><SettingsPage /></PagePanel>
         <PagePanel active={page === "visitorIps"}><VisitorIpsPage /></PagePanel>
         <PagePanel active={page === "statistieken"}><StatistiekenPage /></PagePanel>
