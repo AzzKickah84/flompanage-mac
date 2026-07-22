@@ -1,0 +1,14 @@
+node_modules/
+**/bin/
+**/obj/
+**/release/
+.DS_Store
+*.user
+*.suo
+Thumbs.db
+
+# Built UI assets (CI rebuilds)
+Flompanage/Mac/Flompanage.Mac/wwwroot/assets/
+Flompanage/Mac/Flompanage.Mac/wwwroot/index.html
+Flompanage/Mac/Flompanage.Mac/wwwroot/flompanage-build.json
+Flompanage/Mac/dist/

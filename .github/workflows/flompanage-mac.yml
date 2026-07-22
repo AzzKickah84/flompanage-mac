@@ -1,0 +1,46 @@
+name: Build Flompanage Mac
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "Flompanage/Mac/**"
+      - "Flompanage/ui/**"
+      - "scripts/bump-flompanage-mac-version.mjs"
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Flompanage/ui/package-lock.json
+
+      - name: Install UI dependencies
+        working-directory: Flompanage/ui
+        run: npm ci
+
+      - name: Build Mac installers
+        working-directory: Flompanage/Mac
+        run: |
+          chmod +x build-mac.sh scripts/create-dmg.sh
+          NO_BUMP=1 ./build-mac.sh -NoBump
+
+      - name: Upload DMG artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flompanage-Mac-DMG
+          path: Flompanage/Mac/dist/*.dmg
+          if-no-files-found: error

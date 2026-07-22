@@ -1,0 +1,22 @@
+export type FlompanageAboutInfo = {
+  appName: string;
+  platform?: string;
+  version: string;
+  fileVersion?: string | null;
+  uiBuildVersion?: string | null;
+  uiBuiltAt?: string | null;
+  uiAsset?: string | null;
+  installPath: string;
+  executablePath?: string | null;
+  configPath: string;
+  webViewDataPath: string;
+  localServerUrl: string;
+  targetServerUrl: string;
+  dotnetVersion: string;
+  osVersion: string;
+  webView2Version?: string | null;
+  updateGithubRepo?: string | null;
+  updateManifestUrl?: string | null;
+  processId: number;
+  userAgent: string;
+};
