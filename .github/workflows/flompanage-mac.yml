@@ -23,7 +23,7 @@ jobs:
 
       - name: Install MAUI workload
         working-directory: Flompanage/Mac
-        run: dotnet workload install maui --skip-manifest-update
+        run: dotnet workload install maui --version 8.0.100
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,8 +38,11 @@ jobs:
 
       - name: Build Mac installers
         working-directory: Flompanage/Mac
+        env:
+          SKIP_MAUI_WORKLOAD_INSTALL: "1"
         run: |
           chmod +x build-mac.sh scripts/create-dmg.sh
+          dotnet --version
           NO_BUMP=1 ./build-mac.sh -NoBump
 
       - name: Upload DMG artifacts

@@ -55,8 +55,12 @@ export VITE_OUT_DIR="$SERVER_PROJECT/wwwroot"
 npm run build:mac
 
 echo "[3/7] .NET MAUI workload..."
-if ! dotnet workload list | grep -q maui; then
-  dotnet workload install maui --skip-manifest-update || dotnet workload install maui
+if [[ -z "${SKIP_MAUI_WORKLOAD_INSTALL:-}" ]]; then
+  if ! dotnet workload list | grep -q maui; then
+    dotnet workload install maui --skip-manifest-update || dotnet workload install maui
+  fi
+else
+  echo "  (overgeslagen — workload al geïnstalleerd in CI)"
 fi
 
 bundle_pair() {
@@ -79,7 +83,7 @@ bundle_pair() {
   rm -rf "$MAUI_OUT"
   dotnet publish "$MAUI_PROJECT/Flompanage.Mac.csproj" \
     -c Release \
-    -f net9.0-maccatalyst \
+    -f net8.0-maccatalyst \
     -r "$MAUI_RID" \
     -p:CreatePackage=false \
     -o "$MAUI_OUT"
